@@ -1,5 +1,5 @@
 const Users = require("../users/users-model");
-const Posts = require("../posts/posts-model");
+// const Posts = require("../posts/posts-model");
 
 function logger(req, res, next) {
   // DO YOUR MAGIC
@@ -27,64 +27,38 @@ function logger(req, res, next) {
   next();
 }
 
-function validateUserId(req, res, next) {
-  // DO YOUR MAGIC
-  console.log("checkThatHubIdIsReal middleware");
-  Users.getById(req.params.id)
-    .then((user) => {
-      if (!user) {
-        res.status(404).json({
-          error: `hub with id ${req.params.id} not here`,
-        });
-        // next({
-        //   status: 404,
-        //   message: `hub with id ${req.params.id} not here`,
-        // })
-      } else {
-        // since we have the hub we append it to req
-        req.user = user;
-        next();
-      }
-    })
-    .catch((err) => {
-      next(err);
-    });
+async function validateUserId(req, res, next) {
+  const { id } = req.params;
+  try {
+    const user = await Users.getById(id);
+    if (user) {
+      req.user = user;
+      next();
+    } else {
+      res.status(404).json({ message: "user not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
 }
 
 function validateUser(req, res, next) {
   // DO YOUR MAGIC
-  const { name } = req.body;
-  // DO YOUR MAGIC
-  if (!name) {
-    // validation fails
-    next({
-      message: "missing required text field",
-      status: 400,
-    });
-    // res.status(422).json({ message: 'name is required' })
+  if (req.body.constructor === Object && Object.keys(req.body).length === 0) {
+    res.status(400).json({ message: "missing user data" });
+  } else if (!req.body.name) {
+    res.status(400).json({ message: "missing required name field" });
   } else {
-    req.user = { name: req.body.name.trim() };
     next();
   }
 }
 
 function validatePost(req, res, next) {
-  const { text } = req.body;
-  // DO YOUR MAGIC
-  if (
-    !text ||
-    typeof text !== "string" ||
-    // !name.trim() ||
-    text.trim().length <= 2
-  ) {
-    // validation fails
-    next({
-      message: "missing required text field",
-      status: 400,
-    });
-    // res.status(422).json({ message: 'name is required' })
+  if (req.body.constructor === Object && Object.keys(req.body).length === 0) {
+    res.status(400).json({ message: "missing post data" });
+  } else if (!req.body.text) {
+    res.status(400).json({ message: "missing required text field" });
   } else {
-    req.post = { text: req.body.text.trim() };
     next();
   }
 }
