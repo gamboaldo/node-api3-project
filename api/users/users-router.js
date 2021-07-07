@@ -16,10 +16,9 @@ router.get("/", (req, res, next) => {
   // RETURN AN ARRAY WITH ALL THE USERS
   Users.get()
     .then((hubs) => {
-      // throw new Error('TOTAL DISASTER')
       res.status(200).json(hubs);
     })
-    // .catch(err => next(err));
+
     .catch(next);
 });
 
@@ -43,7 +42,6 @@ router.post("/", validateUser, async (req, res, next) => {
 // and another middleware to check that the request body is valid
 router.put("/:id", validateUserId, validateUser, async (req, res, next) => {
   const { id } = req.params;
-  // const userToUpdate = req.body;
 
   try {
     const updatedUser = await Users.update(id, req.body);
